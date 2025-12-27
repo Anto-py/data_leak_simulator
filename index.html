@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Leak Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           VARIABLES CSS - RETROFUTURISME
+        ============================================ */
+        :root {
+            --retro-teal: #127676;
+            --retro-orange: #E4632E;
+            --retro-jaune: #E3A535;
+            --retro-ink: #0D1617;
+            --retro-paper: #F2EFE6;
+            
+            /* États sémantiques */
+            --risk-low: #127676;
+            --risk-medium: #E3A535;
+            --risk-high: #E4632E;
+            --risk-critical: #c0392b;
+        }
+
+        /* ============================================
+           RESET & BASE
+        ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--retro-ink);
+            color: var(--retro-ink);
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        /* ============================================
+           CADRE DE PAGE ART NOUVEAU
+        ============================================ */
+        .page-frame {
+            background: var(--retro-paper);
+            border: 4px solid var(--retro-orange);
+            border-radius: 8px;
+            min-height: calc(100vh - 24px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .corner-flourish {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            color: var(--retro-teal);
+            opacity: 0.5;
+            font-size: 40px;
+            line-height: 1;
+        }
+
+        .corner-flourish.top-left { top: 8px; left: 12px; }
+        .corner-flourish.top-right { top: 8px; right: 12px; transform: scaleX(-1); }
+        .corner-flourish.bottom-left { bottom: 8px; left: 12px; transform: scaleY(-1); }
+        .corner-flourish.bottom-right { bottom: 8px; right: 12px; transform: scale(-1); }
+
+        /* ============================================
+           ÉCRANS
+        ============================================ */
+        .screen {
+            display: none;
+            padding: 40px 20px;
+            min-height: calc(100vh - 48px);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================
+           TYPOGRAPHIE
+        ============================================ */
+        h1 {
+            font-family: 'Anton', Impact, sans-serif;
+            font-size: clamp(2rem, 8vw, 4rem);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--retro-teal);
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1.3rem, 5vw, 2rem);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--retro-orange);
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2rem;
+            color: var(--retro-teal);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        /* ============================================
+           BOUTONS PILL RETROFUTURISTES
+        ============================================ */
+        .btn-pill {
+            display: inline-flex;
+            align-items: stretch;
+            border-radius: 50px;
+            border: 3px solid var(--retro-teal);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(18, 118, 118, 0.3);
+        }
+
+        .btn-pill-text {
+            background: var(--retro-jaune);
+            color: var(--retro-ink);
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-pill-icon {
+            background: var(--retro-orange);
+            color: var(--retro-paper);
+            width: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        /* Variante secondaire */
+        .btn-pill.secondary .btn-pill-text {
+            background: var(--retro-paper);
+            border-right: 2px solid var(--retro-teal);
+        }
+
+        .btn-pill.secondary .btn-pill-icon {
+            background: var(--retro-teal);
+        }
+
+        /* Boutons de choix (oui/non) */
+        .btn-choice {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: 3px solid var(--retro-teal);
+            background: var(--retro-paper);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-choice:hover {
+            transform: scale(1.02);
+        }
+
+        .btn-choice.yes {
+            background: rgba(18, 118, 118, 0.1);
+        }
+
+        .btn-choice.yes:hover {
+            background: var(--retro-teal);
+            color: var(--retro-paper);
+        }
+
+        .btn-choice.no {
+            background: rgba(228, 99, 46, 0.1);
+        }
+
+        .btn-choice.no:hover {
+            background: var(--retro-orange);
+            color: var(--retro-paper);
+        }
+
+        .btn-choice-icon {
+            font-size: 1.5rem;
+        }
+
+        /* ============================================
+           ÉCRAN INTRO
+        ============================================ */
+        #screen-intro {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 2rem;
+        }
+
+        .intro-subtitle {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.3rem;
+            color: var(--retro-orange);
+            margin-top: -1rem;
+        }
+
+        .intro-context {
+            max-width: 500px;
+            font-size: 1.1rem;
+            background: rgba(18, 118, 118, 0.08);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border-left: 4px solid var(--retro-teal);
+        }
+
+        .intro-warning {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--retro-orange);
+            opacity: 0.8;
+        }
+
+        /* ============================================
+           ÉCRANS JOURNÉES
+        ============================================ */
+        .day-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--retro-teal);
+        }
+
+        .day-badge {
+            background: var(--retro-teal);
+            color: var(--retro-paper);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .day-time {
+            font-family: 'Oswald', sans-serif;
+            color: var(--retro-orange);
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 8px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--retro-paper);
+            border: 2px solid var(--retro-teal);
+            transition: all 0.3s;
+        }
+
+        .progress-dot.completed {
+            background: var(--retro-teal);
+        }
+
+        .progress-dot.current {
+            background: var(--retro-orange);
+            border-color: var(--retro-orange);
+            transform: scale(1.2);
+        }
+
+        .day-context {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Carte de tâche */
+        .task-card {
+            background: var(--retro-paper);
+            border: 3px solid var(--retro-teal);
+            border-radius: 24px 8px 24px 8px;
+            box-shadow: inset 0 0 0 2px var(--retro-orange);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .task-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .task-title-icon {
+            font-size: 1.5rem;
+        }
+
+        .task-description {
+            margin-bottom: 1rem;
+        }
+
+        /* Zone prompt */
+        .prompt-zone {
+            background: var(--retro-ink);
+            color: #a0f0a0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-top: 1rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .prompt-label {
+            color: var(--retro-jaune);
+            font-family: 'Oswald', sans-serif;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        /* Choix */
+        .choice-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 600px) {
+            .choice-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Compteur discret */
+        .data-counter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.75rem 1rem;
+            background: rgba(228, 99, 46, 0.1);
+            border-radius: 50px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .data-counter-icon {
+            font-size: 1.2rem;
+        }
+
+        .data-counter-value {
+            color: var(--retro-orange);
+            font-weight: 600;
+        }
+
+        /* Feedback */
+        .feedback-message {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-top: 1.5rem;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-message.neutral {
+            background: rgba(18, 118, 118, 0.1);
+            border: 2px solid var(--retro-teal);
+        }
+
+        .feedback-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-text {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        .btn-continue {
+            margin-top: 1.5rem;
+        }
+
+        /* ============================================
+           ÉCRAN RÉVÉLATION
+        ============================================ */
+        #screen-reveal {
+            align-items: center;
+            padding-top: 60px;
+        }
+
+        .glitch-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--retro-ink);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: glitchFade 2.5s forwards;
+        }
+
+        @keyframes glitchFade {
+            0%, 40% { opacity: 1; }
+            100% { opacity: 0; pointer-events: none; }
+        }
+
+        .glitch-text {
+            color: var(--retro-orange);
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            animation: glitchPulse 0.3s infinite;
+        }
+
+        @keyframes glitchPulse {
+            0%, 100% { opacity: 1; transform: translateX(0); }
+            25% { opacity: 0.8; transform: translateX(-3px); }
+            75% { opacity: 0.9; transform: translateX(3px); }
+        }
+
+        .reveal-intro {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .reveal-timeline {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2rem;
+            color: var(--retro-orange);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Dossier confidentiel */
+        .confidential-dossier {
+            width: 100%;
+            max-width: 700px;
+            background: #fffef8;
+            border: 3px solid var(--retro-ink);
+            border-radius: 4px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .stamp {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--retro-orange);
+            font-family: 'Anton', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 3px solid var(--retro-orange);
+            padding: 5px 15px;
+            transform: rotate(12deg);
+            opacity: 0.8;
+        }
+
+        .dossier-title {
+            font-family: 'Anton', sans-serif;
+            font-size: 1.5rem;
+            color: var(--retro-ink);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px dashed var(--retro-ink);
+        }
+
+        /* Entrées du dossier par jour */
+        .dossier-entry {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(18, 118, 118, 0.05);
+            border-left: 4px solid var(--retro-teal);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .dossier-entry.skipped {
+            opacity: 0.5;
+            border-left-color: #aaa;
+        }
+
+        .dossier-entry-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.75rem;
+        }
+
+        .dossier-entry-icon {
+            font-size: 1.2rem;
+        }
+
+        .dossier-entry-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .dossier-prompt-extract {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.05);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+            color: #555;
+        }
+
+        .dossier-data-list {
+            list-style: none;
+        }
+
+        .dossier-data-list li {
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .data-level {
+            flex-shrink: 0;
+        }
+
+        .data-level.yellow { color: #b8860b; }
+        .data-level.orange { color: var(--retro-orange); }
+        .data-level.red { color: #c0392b; }
+
+        /* Score d'exposition */
+        .exposure-score {
+            margin-top: 2rem;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .exposure-score.low {
+            background: rgba(18, 118, 118, 0.15);
+            border: 3px solid var(--retro-teal);
+        }
+
+        .exposure-score.medium {
+            background: rgba(227, 165, 53, 0.15);
+            border: 3px solid var(--retro-jaune);
+        }
+
+        .exposure-score.high {
+            background: rgba(228, 99, 46, 0.15);
+            border: 3px solid var(--retro-orange);
+        }
+
+        .exposure-score.critical {
+            background: rgba(192, 57, 43, 0.15);
+            border: 3px solid #c0392b;
+        }
+
+        .score-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-label {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .score-details {
+            font-size: 0.95rem;
+            margin-top: 1rem;
+        }
+
+        .score-stat {
+            display: inline-block;
+            margin: 0.25rem 0.5rem;
+            padding: 0.3rem 0.8rem;
+            background: rgba(0,0,0,0.05);
+            border-radius: 50px;
+        }
+
+        /* Conséquences narratives */
+        .consequences {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: var(--retro-ink);
+            color: var(--retro-paper);
+            border-radius: 12px;
+            max-width: 700px;
+        }
+
+        .consequences-title {
+            font-family: 'Oswald', sans-serif;
+            color: var(--retro-jaune);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .consequences-text {
+            line-height: 1.7;
+        }
+
+        .btn-to-debrief {
+            margin-top: 2rem;
+        }
+
+        /* ============================================
+           ÉCRAN DÉBRIEF
+        ============================================ */
+        #screen-debrief {
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .debrief-section {
+            width: 100%;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--retro-paper);
+            border: 3px solid var(--retro-teal);
+            border-radius: 24px 8px 24px 8px;
+        }
+
+        .debrief-section h2 {
+            margin-bottom: 1rem;
+        }
+
+        /* Règles d'or */
+        .golden-rules {
+            list-style: none;
+        }
+
+        .golden-rules li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed rgba(18, 118, 118, 0.3);
+        }
+
+        .golden-rules li:last-child {
+            border-bottom: none;
+        }
+
+        .rule-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .rule-text {
+            font-size: 1rem;
+        }
+
+        .rule-text strong {
+            color: var(--retro-teal);
+        }
+
+        /* Tableau alternatives */
+        .alternatives-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        .alternatives-table th {
+            background: var(--retro-teal);
+            color: var(--retro-paper);
+            padding: 0.75rem;
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .alternatives-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .alternatives-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .alternatives-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(18, 118, 118, 0.2);
+            font-size: 0.9rem;
+        }
+
+        .alternatives-table tr:last-child td:first-child {
+            border-radius: 0 0 0 8px;
+        }
+
+        .alternatives-table tr:last-child td:last-child {
+            border-radius: 0 0 8px 0;
+        }
+
+        /* Checklist */
+        .security-checklist {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .security-checklist li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.6rem 0;
+        }
+
+        .check-icon {
+            color: var(--retro-teal);
+            font-size: 1.2rem;
+        }
+
+        /* Boutons finaux */
+        .final-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        /* ============================================
+           RESPONSIVE
+        ============================================ */
+        @media (max-width: 500px) {
+            .page-frame {
+                border-width: 3px;
+            }
+
+            .screen {
+                padding: 30px 15px;
+            }
+
+            .corner-flourish {
+                display: none;
+            }
+
+            .task-card {
+                padding: 1rem;
+            }
+
+            .prompt-zone {
+                font-size: 0.75rem;
+                max-height: 200px;
+            }
+
+            .confidential-dossier {
+                padding: 1rem;
+            }
+
+            .stamp {
+                top: 10px;
+                right: 10px;
+                font-size: 0.8rem;
+            }
+
+            .alternatives-table {
+                font-size: 0.8rem;
+            }
+
+            .alternatives-table th,
+            .alternatives-table td {
+                padding: 0.5rem;
+            }
+        }
+
+        /* ============================================
+           UTILITAIRES
+        ============================================ */
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .hidden { display: none !important; }
+
+        /* Séparateur Art Nouveau */
+        .separator {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 2rem 0;
+            color: var(--retro-teal);
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--retro-teal) 20%, var(--retro-teal) 80%, transparent);
+        }
+
+        .separator .flourish {
+            font-size: 1.5rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-frame">
+        <!-- Ornements Art Nouveau aux coins -->
+        <span class="corner-flourish top-left">❧</span>
+        <span class="corner-flourish top-right">❧</span>
+        <span class="corner-flourish bottom-left">❧</span>
+        <span class="corner-flourish bottom-right">❧</span>
+
+        <!-- ==========================================
+             ÉCRAN 0 : INTRODUCTION
+        ========================================== -->
+        <section id="screen-intro" class="screen active">
+            <h1>Data Leak<br>Simulator</h1>
+            <p class="intro-subtitle">5 jours dans la peau d'un stagiaire</p>
+            
+            <div class="intro-context">
+                <p>Tu es stagiaire chez <strong>DigitalFlow</strong>, une PME de conseil. Pour gagner du temps, tu utilises ChatGPT gratuit.</p>
+                <p><em>Mais quelles traces laisses-tu derrière toi ?</em></p>
+            </div>
+
+            <button class="btn-pill" onclick="startSimulation()">
+                <span class="btn-pill-text">Commencer ma semaine de stage</span>
+                <span class="btn-pill-icon">▶</span>
+            </button>
+
+            <p class="intro-warning">
+                <span>⏱</span>
+                <span>Durée : environ 15 minutes</span>
+            </p>
+        </section>
+
+        <!-- ==========================================
+             ÉCRANS 1-5 : LES JOURNÉES
+        ========================================== -->
+        <section id="screen-day" class="screen">
+            <header class="day-header">
+                <span class="day-badge" id="day-badge">Jour 1/5</span>
+                <div class="progress-bar" id="progress-bar"></div>
+                <span class="day-time" id="day-time">Lundi 9h30</span>
+            </header>
+
+            <p class="day-context" id="day-context"></p>
+
+            <div class="task-card">
+                <div class="task-title">
+                    <span class="task-title-icon" id="task-icon">📋</span>
+                    <h2 id="task-title"></h2>
+                </div>
+                <p class="task-description" id="task-description"></p>
+
+                <div class="prompt-zone">
+                    <p class="prompt-label">💬 Prompt que tu pourrais copier-coller dans ChatGPT :</p>
+                    <div id="prompt-content"></div>
+                </div>
+            </div>
+
+            <div id="choice-phase">
+                <h3 class="text-center">Que fais-tu ?</h3>
+                <div class="choice-container">
+                    <button class="btn-choice yes" onclick="makeChoice(true)">
+                        <span class="btn-choice-icon">✅</span>
+                        <span>J'utilise ChatGPT pour cette tâche</span>
+                    </button>
+                    <button class="btn-choice no" onclick="makeChoice(false)">
+                        <span class="btn-choice-icon">❌</span>
+                        <span>Je fais sans IA cette fois</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="feedback-phase" class="hidden">
+                <div class="feedback-message neutral" id="feedback-message">
+                    <div class="feedback-icon" id="feedback-icon">⚡</div>
+                    <p class="feedback-text" id="feedback-text"></p>
+                </div>
+
+                <div class="data-counter" id="data-counter">
+                    <span class="data-counter-icon">📊</span>
+                    <span>Données confiées à l'IA :</span>
+                    <span class="data-counter-value" id="data-counter-value">0</span>
+                    <span>éléments</span>
+                </div>
+
+                <div class="text-center btn-continue">
+                    <button class="btn-pill" onclick="nextDay()">
+                        <span class="btn-pill-text" id="btn-continue-text">Jour suivant</span>
+                        <span class="btn-pill-icon">→</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             ÉCRAN 6 : RÉVÉLATION
+        ========================================== -->
+        <section id="screen-reveal" class="screen">
+            <div class="glitch-overlay" id="glitch-overlay">
+                <p class="glitch-text">⚠️ INCIDENT DÉTECTÉ ⚠️</p>
+            </div>
+
+            <div class="reveal-intro">
+                <p class="reveal-timeline">3 mois plus tard...</p>
+                <p>Un concurrent a publié des informations sur DigitalFlow. Après enquête, la source est identifiée : <strong>les données d'entraînement de ChatGPT</strong>.</p>
+                <p>Voici ce qu'un analyste malveillant a pu reconstituer grâce à <strong>TES prompts</strong>...</p>
+            </div>
+
+            <div class="confidential-dossier">
+                <div class="stamp">CONFIDENTIEL</div>
+                <h3 class="dossier-title">📁 Dossier compilé – DigitalFlow</h3>
+                <div id="dossier-entries"></div>
+            </div>
+
+            <div class="exposure-score" id="exposure-score">
+                <div class="score-icon" id="score-icon">🟢</div>
+                <p class="score-label" id="score-label">Niveau de risque</p>
+                <p class="score-details" id="score-details"></p>
+            </div>
+
+            <div class="consequences" id="consequences">
+                <h3 class="consequences-title">📰 Les conséquences</h3>
+                <p class="consequences-text" id="consequences-text"></p>
+            </div>
+
+            <button class="btn-pill btn-to-debrief" onclick="showDebrief()">
+                <span class="btn-pill-text">Alors, on fait quoi maintenant ?</span>
+                <span class="btn-pill-icon">→</span>
+            </button>
+        </section>
+
+        <!-- ==========================================
+             ÉCRAN 7 : DÉBRIEF PÉDAGOGIQUE
+        ========================================== -->
+        <section id="screen-debrief" class="screen">
+            <h1>Et maintenant ?</h1>
+
+            <div class="separator"><span class="flourish">❧</span></div>
+
+            <div class="debrief-section">
+                <h2>📊 Ce que tu as appris</h2>
+                <p id="debrief-summary"></p>
+                <p><em>Si c'était à refaire, que changerais-tu ?</em></p>
+            </div>
+
+            <div class="debrief-section">
+                <h2>🏆 Les 5 règles d'or</h2>
+                <ul class="golden-rules">
+                    <li>
+                        <span class="rule-icon">❌</span>
+                        <span class="rule-text"><strong>Jamais de noms</strong> de personnes dans une IA publique</span>
+                    </li>
+                    <li>
+                        <span class="rule-icon">❌</span>
+                        <span class="rule-text"><strong>Jamais de chiffres</strong> financiers ou stratégiques</span>
+                    </li>
+                    <li>
+                        <span class="rule-icon">❌</span>
+                        <span class="rule-text"><strong>Jamais de données client</strong> sans anonymisation complète</span>
+                    </li>
+                    <li>
+                        <span class="rule-icon">✅</span>
+                        <span class="rule-text"><strong>Toujours vérifier</strong> si ton entreprise a une IA sécurisée</span>
+                    </li>
+                    <li>
+                        <span class="rule-icon">✅</span>
+                        <span class="rule-text"><strong>En cas de doute</strong>, demande à ton responsable</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="debrief-section">
+                <h2>🔄 Les alternatives</h2>
+                <p>Comment aurais-tu pu faire autrement ?</p>
+                <table class="alternatives-table">
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>❌ IA publique</th>
+                            <th>✅ Solutions sécurisées</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Correction de texte</td>
+                            <td>ChatGPT</td>
+                            <td>LanguageTool Pro, IA interne</td>
+                        </tr>
+                        <tr>
+                            <td>Compte-rendu</td>
+                            <td>ChatGPT</td>
+                            <td>Prise de notes manuelle, Otter.ai entreprise</td>
+                        </tr>
+                        <tr>
+                            <td>Analyse de données</td>
+                            <td>ChatGPT</td>
+                            <td>Outils BI internes, tableur</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="debrief-section">
+                <h2>🔐 Comment détecter une IA sécurisée ?</h2>
+                <ul class="security-checklist">
+                    <li>
+                        <span class="check-icon">✅</span>
+                        <span>L'IA est payante (abonnement entreprise)</span>
+                    </li>
+                    <li>
+                        <span class="check-icon">✅</span>
+                        <span>Mention RGPD/conformité dans les CGU</span>
+                    </li>
+                    <li>
+                        <span class="check-icon">✅</span>
+                        <span>Hébergement de données en Europe</span>
+                    </li>
+                    <li>
+                        <span class="check-icon">✅</span>
+                        <span>Pas de réutilisation pour l'entraînement</span>
+                    </li>
+                    <li>
+                        <span class="check-icon">✅</span>
+                        <span>Contrat de confidentialité signé par l'entreprise</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="final-buttons">
+                <button class="btn-pill" onclick="restartSimulation()">
+                    <span class="btn-pill-text">🔄 Recommencer</span>
+                    <span class="btn-pill-icon">↺</span>
+                </button>
+                <button class="btn-pill secondary" onclick="showStats()">
+                    <span class="btn-pill-text">📊 Mes statistiques</span>
+                    <span class="btn-pill-icon">i</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ============================================
+        // DONNÉES DES SCÉNARIOS
+        // ============================================
+        const scenarios = [
+            {
+                day: 1,
+                dayName: "Lundi",
+                time: "Lundi 9h30",
+                icon: "📋",
+                context: "Réunion stratégique de ce matin avec les partenaires",
+                title: "Compte-rendu de réunion",
+                description: "Tu dois mettre au propre tes notes manuscrites de la réunion de ce matin. Ton tuteur te demande un compte-rendu structuré pour les absents.",
+                prompt: `Peux-tu mettre en forme ce compte-rendu de réunion ?
+
+Réunion du 15/01/2025 - Projet "Phoenix"
+Présents: Marie Dubois (DG), Thomas Chen (DSI), Sophie Martin (client Luxor SA)
+
+Points abordés:
+- Budget projet: 180 000€
+- Deadline: mars 2025
+- Problème concurrent: TechCorp propose 20% moins cher
+- Solution: proposer module exclusif IA prédictive
+- Prochaine réunion: 22/01 pour signature contrat`,
+                dataCount: 5,
+                leakedData: [
+                    { level: "red", text: "Identités: Marie Dubois (DG), Thomas Chen (DSI), Sophie Martin (Luxor SA)" },
+                    { level: "red", text: "Budget projet: 180 000€" },
+                    { level: "red", text: "Stratégie anti-concurrence: module IA prédictive" },
+                    { level: "orange", text: "Deadline projet: mars 2025" },
+                    { level: "orange", text: "Concurrent identifié: TechCorp (-20%)" }
+                ],
+                promptExtract: "Réunion du 15/01/2025 - Projet Phoenix..."
+            },
+            {
+                day: 2,
+                dayName: "Mardi",
+                time: "Mardi 14h00",
+                icon: "✉️",
+                context: "Un partenaire allemand a envoyé un mail avec des fautes, ton tuteur te demande de le corriger",
+                title: "Reformulation de mail partenaire",
+                description: "Le mail du partenaire allemand doit être corrigé et reformulé avant d'être archivé. Ton tuteur te demande de l'améliorer.",
+                prompt: `Corrige ce mail et améliore la formulation:
+
+Madame Dubois,
+
+Concernant le contrat pour le projet Phoenix, nous confirmons:
+- Conditions de paiement: 50% à la signature
+- Hébergement des données sur serveurs allemands (RGPD)
+- Clause d'exclusivité pour 2 ans dans la région DACH
+
+Cordialement,
+Klaus Hoffmann
+Directeur général, DataSecure GmbH
+klaus.hoffmann@datasecure.de
++49 30 123456`,
+                dataCount: 4,
+                leakedData: [
+                    { level: "red", text: "Contact partenaire: Klaus Hoffmann, DG DataSecure GmbH" },
+                    { level: "red", text: "Email + téléphone professionnel du partenaire" },
+                    { level: "red", text: "Clause d'exclusivité stratégique (2 ans, région DACH)" },
+                    { level: "orange", text: "Conditions de paiement: 50% à la signature" }
+                ],
+                promptExtract: "Corrige ce mail... Klaus Hoffmann..."
+            },
+            {
+                day: 3,
+                dayName: "Mercredi",
+                time: "Mercredi 10h15",
+                icon: "📊",
+                context: "Ton tuteur te demande d'analyser les données de satisfaction client",
+                title: "Tableau de données clients",
+                description: "Tu dois créer un résumé des retours clients du dernier trimestre pour identifier les points à améliorer.",
+                prompt: `Analyse ces retours clients et fais-moi un résumé des points à améliorer:
+
+Client A (Luxor SA - Sophie Martin): "Délais non respectés, mais qualité OK. Note: 6/10"
+Client B (MediCare ASBL - Dr. Karim Belgacem): "Excellent travail, données sensibles bien protégées. Note: 9/10"
+Client C (Retail Plus - anonyme): "Prix trop élevé, cherche alternative. Note: 4/10"
+Client D (EduFuture - directrice Amélie Rousseau): "Interface peu intuitive pour nos enseignants. Note: 5/10"`,
+                dataCount: 6,
+                leakedData: [
+                    { level: "red", text: "Identités clients: Sophie Martin (Luxor SA), Dr. Belgacem (MediCare), Amélie Rousseau (EduFuture)" },
+                    { level: "red", text: "Évaluations négatives identifiables (notes 4-6/10)" },
+                    { level: "red", text: "Données secteur médical (MediCare ASBL)" },
+                    { level: "orange", text: "Client insatisfait cherchant alternative (risque départ)" },
+                    { level: "orange", text: "Problèmes internes révélés (délais, prix, interface)" },
+                    { level: "yellow", text: "Noms d'entreprises clientes compilés" }
+                ],
+                promptExtract: "Analyse ces retours clients... MediCare ASBL..."
+            },
+            {
+                day: 4,
+                dayName: "Jeudi",
+                time: "Jeudi 16h30",
+                icon: "👤",
+                context: "Un candidat a postulé mais n'a pas le profil, ton tuteur te demande un mail de refus poli",
+                title: "Email de refus de candidature",
+                description: "Tu dois rédiger un email poli pour refuser une candidature. Ton tuteur t'a transmis les notes sur le candidat.",
+                prompt: `Rédige un email poli pour refuser cette candidature:
+
+Candidat: Jonathan Lemaire
+Poste: Développeur senior
+Problème:
+- CV avec période de chômage 2022-2024 non expliquée
+- Compétences obsolètes (technologies dépassées)
+- Prétentions salariales trop élevées (demande 4500€, notre budget: 3200€)
+- Fautes d'orthographe dans la lettre de motivation
+
+Email: jonathan.lemaire.1985@gmail.com`,
+                dataCount: 7,
+                leakedData: [
+                    { level: "red", text: "Identité complète + email personnel du candidat" },
+                    { level: "red", text: "Information discrimination potentielle (période chômage)" },
+                    { level: "red", text: "Âge déduit de l'email (né en 1985)" },
+                    { level: "red", text: "Jugements négatifs traçables sur le candidat" },
+                    { level: "orange", text: "Budget salarial interne révélé (3200€)" },
+                    { level: "orange", text: "Prétentions salariales du candidat (4500€)" },
+                    { level: "yellow", text: "Poste ouvert identifié (Développeur senior)" }
+                ],
+                promptExtract: "Refuser cette candidature... Jonathan Lemaire..."
+            },
+            {
+                day: 5,
+                dayName: "Vendredi",
+                time: "Vendredi 11h00",
+                icon: "📅",
+                context: "Fin de semaine, ton tuteur te demande d'optimiser le planning de l'équipe",
+                title: "Planification interne",
+                description: "Tu dois créer un planning optimal pour la semaine prochaine en tenant compte des contraintes de chacun.",
+                prompt: `Crée un planning optimal pour la semaine prochaine avec ces contraintes:
+
+Équipe:
+- Marie (DG): Lundi matin indisponible (RDV médical)
+- Thomas (DSI): Mardi absent (formation cybersécurité)
+- Léa (développeuse): Jeudi après-midi (entretien embauche ailleurs - confidentiel!)
+- Marc (commercial): Mercredi matin (RDV client Luxor pour signer)
+
+Projets urgents:
+- Phoenix: livraison démo pour mardi
+- Audit sécurité: deadline vendredi (problème faille détectée hier)`,
+                dataCount: 5,
+                leakedData: [
+                    { level: "red", text: "Information médicale personnelle (RDV médical Marie)" },
+                    { level: "red", text: "Projet de départ employée (Léa - entretien ailleurs)" },
+                    { level: "red", text: "Vulnérabilité sécurité non résolue (faille détectée)" },
+                    { level: "orange", text: "Planning stratégique et deadlines internes" },
+                    { level: "orange", text: "Informations RH individuelles de l'équipe" }
+                ],
+                promptExtract: "Crée un planning... entretien embauche ailleurs..."
+            }
+        ];
+
+        // ============================================
+        // ÉTAT DE L'APPLICATION
+        // ============================================
+        let state = {
+            currentDay: 0,
+            choices: [],
+            totalDataLeaked: 0
+        };
+
+        // ============================================
+        // FONCTIONS DE NAVIGATION
+        // ============================================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function startSimulation() {
+            state = {
+                currentDay: 0,
+                choices: [],
+                totalDataLeaked: 0
+            };
+            loadDay(0);
+            showScreen('screen-day');
+        }
+
+        function restartSimulation() {
+            localStorage.removeItem('dataLeakSimulator');
+            startSimulation();
+            showScreen('screen-intro');
+        }
+
+        // ============================================
+        // GESTION DES JOURNÉES
+        // ============================================
+        function loadDay(dayIndex) {
+            const scenario = scenarios[dayIndex];
+            
+            // Mise à jour header
+            document.getElementById('day-badge').textContent = `Jour ${scenario.day}/5`;
+            document.getElementById('day-time').textContent = scenario.time;
+            
+            // Barre de progression
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'progress-dot';
+                if (i < dayIndex) dot.classList.add('completed');
+                if (i === dayIndex) dot.classList.add('current');
+                progressBar.appendChild(dot);
+            }
+            
+            // Contenu
+            document.getElementById('day-context').textContent = scenario.context;
+            document.getElementById('task-icon').textContent = scenario.icon;
+            document.getElementById('task-title').textContent = scenario.title;
+            document.getElementById('task-description').textContent = scenario.description;
+            document.getElementById('prompt-content').textContent = scenario.prompt;
+            
+            // Reset affichage
+            document.getElementById('choice-phase').classList.remove('hidden');
+            document.getElementById('feedback-phase').classList.add('hidden');
+            
+            // Compteur
+            document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
+        }
+
+        function makeChoice(usedAI) {
+            const scenario = scenarios[state.currentDay];
+            
+            // Enregistrer le choix
+            state.choices.push({
+                day: scenario.day,
+                dayName: scenario.dayName,
+                title: scenario.title,
+                usedAI: usedAI,
+                dataCount: usedAI ? scenario.dataCount : 0,
+                leakedData: usedAI ? scenario.leakedData : [],
+                promptExtract: scenario.promptExtract
+            });
+            
+            if (usedAI) {
+                state.totalDataLeaked += scenario.dataCount;
+            }
+            
+            // Afficher feedback
+            document.getElementById('choice-phase').classList.add('hidden');
+            document.getElementById('feedback-phase').classList.remove('hidden');
+            
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackText = document.getElementById('feedback-text');
+            
+            if (usedAI) {
+                feedbackIcon.textContent = '⚡';
+                feedbackText.textContent = 'Tâche accomplie rapidement !';
+            } else {
+                feedbackIcon.textContent = '⏱️';
+                feedbackText.textContent = 'Tâche accomplie (un peu plus long)';
+            }
+            
+            document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
+            
+            // Bouton suivant
+            const btnText = document.getElementById('btn-continue-text');
+            if (state.currentDay === 4) {
+                btnText.textContent = 'Fin de semaine';
+            } else {
+                btnText.textContent = 'Jour suivant';
+            }
+            
+            // Sauvegarder
+            saveState();
+        }
+
+        function nextDay() {
+            state.currentDay++;
+            
+            if (state.currentDay >= 5) {
+                showReveal();
+            } else {
+                loadDay(state.currentDay);
+                document.getElementById('choice-phase').classList.remove('hidden');
+                document.getElementById('feedback-phase').classList.add('hidden');
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // ============================================
+        // ÉCRAN RÉVÉLATION
+        // ============================================
+        function showReveal() {
+            showScreen('screen-reveal');
+            
+            // Animation glitch
+            const glitch = document.getElementById('glitch-overlay');
+            glitch.style.display = 'flex';
+            setTimeout(() => {
+                glitch.style.display = 'none';
+            }, 2500);
+            
+            // Générer les entrées du dossier
+            const entriesContainer = document.getElementById('dossier-entries');
+            entriesContainer.innerHTML = '';
+            
+            state.choices.forEach(choice => {
+                const entry = document.createElement('div');
+                entry.className = 'dossier-entry' + (choice.usedAI ? '' : ' skipped');
+                
+                if (choice.usedAI) {
+                    entry.innerHTML = `
+                        <div class="dossier-entry-header">
+                            <span class="dossier-entry-icon">📅</span>
+                            <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
+                        </div>
+                        <div class="dossier-prompt-extract">"${choice.promptExtract}"</div>
+                        <ul class="dossier-data-list">
+                            ${choice.leakedData.map(d => `
+                                <li>
+                                    <span class="data-level ${d.level}">${getLevelEmoji(d.level)}</span>
+                                    <span>${d.text}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                } else {
+                    entry.innerHTML = `
+                        <div class="dossier-entry-header">
+                            <span class="dossier-entry-icon">✓</span>
+                            <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
+                        </div>
+                        <p style="color: #888; font-style: italic;">Aucune donnée transmise à l'IA</p>
+                    `;
+                }
+                
+                entriesContainer.appendChild(entry);
+            });
+            
+            // Calculer le score
+            updateScore();
+        }
+
+        function getLevelEmoji(level) {
+            switch(level) {
+                case 'yellow': return '🟡';
+                case 'orange': return '🟠';
+                case 'red': return '🔴';
+                default: return '⚪';
+            }
+        }
+
+        function updateScore() {
+            const scoreContainer = document.getElementById('exposure-score');
+            const scoreIcon = document.getElementById('score-icon');
+            const scoreLabel = document.getElementById('score-label');
+            const scoreDetails = document.getElementById('score-details');
+            const consequencesText = document.getElementById('consequences-text');
+            
+            // Compter les types de données
+            let personalData = 0;
+            let financialData = 0;
+            let strategicData = 0;
+            let identifiablePeople = 0;
+            
+            state.choices.forEach(choice => {
+                if (choice.usedAI) {
+                    choice.leakedData.forEach(d => {
+                        if (d.text.includes('Identit') || d.text.includes('Email') || d.text.includes('Contact')) {
+                            personalData++;
+                            identifiablePeople++;
+                        }
+                        if (d.text.includes('Budget') || d.text.includes('€') || d.text.includes('salarial')) {
+                            financialData++;
+                        }
+                        if (d.text.includes('Stratégie') || d.text.includes('concurrent') || d.text.includes('Clause')) {
+                            strategicData++;
+                        }
+                    });
+                }
+            });
+            
+            // Déterminer le niveau de risque
+            let riskLevel, riskClass, riskIcon, consequence;
+            
+            if (state.totalDataLeaked === 0) {
+                riskLevel = "AUCUN RISQUE";
+                riskClass = "low";
+                riskIcon = "🟢";
+                consequence = "Grâce à ta prudence, aucune donnée de DigitalFlow n'a fuité. L'entreprise a évité le scandale. Ton tuteur te félicite pour ta rigueur professionnelle.";
+            } else if (state.totalDataLeaked <= 10) {
+                riskLevel = "RISQUE FAIBLE";
+                riskClass = "low";
+                riskIcon = "🟡";
+                consequence = "Certaines informations ont fuité, mais l'impact reste limité. Ton tuteur te rappelle l'importance d'utiliser des outils sécurisés pour les données professionnelles.";
+            } else if (state.totalDataLeaked <= 20) {
+                riskLevel = "RISQUE MODÉRÉ";
+                riskClass = "medium";
+                riskIcon = "🟠";
+                consequence = "La fuite est sérieuse. DigitalFlow a perdu le contrat Luxor SA. Le client a découvert que ses données circulaient en ligne. Ton stage est écourté.";
+            } else {
+                riskLevel = "RISQUE ÉLEVÉ";
+                riskClass = "critical";
+                riskIcon = "🔴";
+                consequence = "Catastrophe. L'APD (Autorité de Protection des Données) sanctionne DigitalFlow pour violation du RGPD. Amende de 50 000€. Plusieurs clients quittent l'entreprise. Des licenciements sont annoncés. Ton tuteur doit gérer une crise majeure.";
+            }
+            
+            scoreContainer.className = 'exposure-score ' + riskClass;
+            scoreIcon.textContent = riskIcon;
+            scoreLabel.textContent = riskLevel;
+            scoreDetails.innerHTML = `
+                <span class="score-stat">👤 ${identifiablePeople} personnes identifiables</span>
+                <span class="score-stat">💰 ${financialData} données financières</span>
+                <span class="score-stat">📈 ${strategicData} stratégies révélées</span>
+                <span class="score-stat">📊 ${state.totalDataLeaked} données au total</span>
+            `;
+            consequencesText.textContent = consequence;
+        }
+
+        // ============================================
+        // ÉCRAN DÉBRIEF
+        // ============================================
+        function showDebrief() {
+            showScreen('screen-debrief');
+            
+            const usedAICount = state.choices.filter(c => c.usedAI).length;
+            const summary = document.getElementById('debrief-summary');
+            
+            if (usedAICount === 0) {
+                summary.innerHTML = `Tu n'as confié <strong>aucune donnée</strong> à l'IA publique cette semaine. Excellent réflexe !`;
+            } else if (usedAICount === 5) {
+                summary.innerHTML = `Tu as utilisé l'IA pour <strong>toutes les tâches</strong>, confiant <strong>${state.totalDataLeaked} données sensibles</strong> à une plateforme publique.`;
+            } else {
+                summary.innerHTML = `Tu as utilisé l'IA pour <strong>${usedAICount} tâches sur 5</strong>, confiant <strong>${state.totalDataLeaked} données sensibles</strong> à une plateforme publique.`;
+            }
+        }
+
+        function showStats() {
+            let statsText = "📊 STATISTIQUES DÉTAILLÉES\n\n";
+            
+            state.choices.forEach((choice, i) => {
+                statsText += `Jour ${i + 1} (${choice.dayName}) - ${choice.title}\n`;
+                statsText += `→ Choix: ${choice.usedAI ? 'IA utilisée' : 'Sans IA'}\n`;
+                statsText += `→ Données exposées: ${choice.dataCount}\n\n`;
+            });
+            
+            statsText += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            statsText += `TOTAL: ${state.totalDataLeaked} données exposées`;
+            
+            alert(statsText);
+        }
+
+        // ============================================
+        // PERSISTANCE
+        // ============================================
+        function saveState() {
+            localStorage.setItem('dataLeakSimulator', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('dataLeakSimulator');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+
+        // Initialisation
+        loadState();
+    </script>
+</body>
+</html>
