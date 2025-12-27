@@ -831,6 +831,208 @@
         .mt-3 { margin-top: 1.5rem; }
         .hidden { display: none !important; }
 
+        /* ============================================
+           MODALE EXEMPLES RÉELS
+        ============================================ */
+        .examples-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 22, 23, 0.95);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .examples-modal-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .examples-modal h1 {
+            color: var(--retro-paper);
+            margin-bottom: 0.5rem;
+        }
+
+        .examples-intro {
+            color: var(--retro-jaune);
+            text-align: center;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .examples-close {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid var(--retro-orange);
+            background: var(--retro-ink);
+            color: var(--retro-orange);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 2001;
+        }
+
+        .examples-close:hover {
+            background: var(--retro-orange);
+            color: var(--retro-paper);
+            transform: scale(1.1);
+        }
+
+        .example-card {
+            background: var(--retro-paper);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .example-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--retro-teal) 0%, #0d5555 100%);
+            color: var(--retro-paper);
+        }
+
+        .example-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+
+        .example-header h2 {
+            color: var(--retro-paper);
+            margin-bottom: 0.25rem;
+            font-size: 1.3rem;
+        }
+
+        .example-subtitle {
+            color: var(--retro-jaune);
+            font-size: 0.95rem;
+            margin: 0;
+            font-style: italic;
+        }
+
+        .example-body {
+            padding: 1.5rem;
+        }
+
+        .example-body h3 {
+            color: var(--retro-teal);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .example-body p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .example-body ul {
+            margin: 0.75rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .example-body li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .example-impact,
+        .example-reaction,
+        .example-link {
+            background: rgba(228, 99, 46, 0.1);
+            border-left: 4px solid var(--retro-orange);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .example-lesson {
+            background: rgba(18, 118, 118, 0.1);
+            border-left: 4px solid var(--retro-teal);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .example-lesson ul {
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+        }
+
+        .example-sources {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+            margin-top: 1rem;
+            margin-bottom: 0;
+        }
+
+        .example-synthesis {
+            background: var(--retro-jaune);
+            color: var(--retro-ink);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .example-synthesis h3 {
+            color: var(--retro-ink);
+            margin-bottom: 1rem;
+        }
+
+        .example-synthesis p {
+            margin-bottom: 0.5rem;
+        }
+
+        .example-synthesis em {
+            font-size: 1.1rem;
+        }
+
+        .examples-close-btn {
+            display: flex;
+            margin: 2rem auto 0;
+        }
+
+        @media (max-width: 500px) {
+            .examples-modal {
+                padding: 15px;
+            }
+
+            .examples-close {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .example-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .example-icon {
+                font-size: 2rem;
+            }
+
+            .example-body {
+                padding: 1rem;
+            }
+        }
+
         /* Séparateur Art Nouveau */
         .separator {
             display: flex;
@@ -1089,8 +1291,120 @@
                     <span class="btn-pill-text">📊 Mes statistiques</span>
                     <span class="btn-pill-icon">i</span>
                 </button>
+                <button class="btn-pill" onclick="showExamples()" style="border-color: var(--retro-orange);">
+                    <span class="btn-pill-text">📰 Exemples réels</span>
+                    <span class="btn-pill-icon" style="background: var(--retro-jaune);">!</span>
+                </button>
             </div>
         </section>
+
+        <!-- ==========================================
+             MODALE EXEMPLES RÉELS
+        ========================================== -->
+        <div id="examples-modal" class="examples-modal hidden">
+            <div class="examples-modal-content">
+                <button class="examples-close" onclick="closeExamples()">✕</button>
+                <h1>Cas réels de fuites</h1>
+                <p class="examples-intro">Ces incidents sont arrivés à de vraies entreprises. Des employés ordinaires qui voulaient juste gagner du temps...</p>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-icon">🔓</span>
+                        <div>
+                            <h2>Cas 1 : Samsung</h2>
+                            <p class="example-subtitle">Quand corriger son code fait fuiter les secrets de l'entreprise</p>
+                        </div>
+                    </div>
+                    <div class="example-body">
+                        <h3>Ce qui s'est passé</h3>
+                        <p>En avril 2023, Samsung autorise ses ingénieurs à utiliser ChatGPT pour leur travail. En moins de trois semaines, trois incidents se produisent :</p>
+                        <ul>
+                            <li>Un ingénieur colle du code confidentiel pour trouver un bug</li>
+                            <li>Un autre demande à l'IA d'optimiser un programme de détection de puces défectueuses</li>
+                            <li>Un troisième copie l'enregistrement complet d'une réunion pour que ChatGPT lui fasse un résumé</li>
+                        </ul>
+                        <div class="example-impact">
+                            <strong>Préjudice immédiat :</strong> Ces secrets de fabrication — algorithmes, processus de test, stratégies internes — sont intégrés dans les données d'entraînement d'OpenAI. Pour une entreprise dont la valeur repose sur son avance technologique en semi-conducteurs, cette fuite réduit la barrière à l'entrée pour les concurrents. Samsung a dû réinvestir massivement dans le développement d'une IA propriétaire.
+                        </div>
+                        <div class="example-reaction">
+                            <strong>La réaction :</strong> Samsung a immédiatement ré-interdit ChatGPT et limité les messages à 1024 caractères. L'entreprise développe désormais sa propre IA interne.
+                        </div>
+                        <div class="example-lesson">
+                            <strong>À retenir pour toi :</strong> Même quand tu utilises l'IA pour des devoirs ou des projets perso, réfléchis : est-ce que je mettrais ça sur un forum public ? Parce que c'est un peu ce que tu fais.
+                        </div>
+                        <p class="example-sources">📰 Sources : Clubic (avril 2023), Tom's Guide, Journal du Geek</p>
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-icon">🔍</span>
+                        <div>
+                            <h2>Cas 2 : Amazon</h2>
+                            <p class="example-subtitle">Quand l'IA commence à "parler" comme si elle connaissait tes secrets</p>
+                        </div>
+                    </div>
+                    <div class="example-body">
+                        <h3>Ce qui s'est passé</h3>
+                        <p>En janvier 2023, un avocat d'Amazon alerte les employés : les réponses de ChatGPT ressemblent étrangement à des données internes de l'entreprise. Des employés utilisaient l'IA pour améliorer du code ou résumer des documents confidentiels.</p>
+                        <div class="example-impact">
+                            <strong>Préjudice identifié :</strong> L'avocat explique que les saisies des employés servent à entraîner les futures versions du modèle. Le risque majeur : des concurrents pourraient poser des questions ciblées et extraire la logique métier d'Amazon — potentiellement des millions de dollars en valeur de R&D exposés. Amazon a dû mettre en place des restrictions d'usage et investir dans la sensibilisation de ses équipes.
+                        </div>
+                        <div class="example-lesson">
+                            <strong>À retenir pour toi :</strong> Ce que tu donnes à manger à l'IA peut ressortir ailleurs, reformulé, pour quelqu'un d'autre. Tes idées de projet, tes textes personnels, tes réflexions... ils alimentent une machine partagée par des millions de personnes.
+                        </div>
+                        <p class="example-sources">📰 Sources : Developpez.com (janvier 2023), Le Big Data</p>
+                    </div>
+                </div>
+
+                <div class="example-card">
+                    <div class="example-header">
+                        <span class="example-icon">🔐</span>
+                        <div>
+                            <h2>Cas 3 : Jaguar Land Rover</h2>
+                            <p class="example-subtitle">Un mot de passe oublié depuis 4 ans qui coûte 2 milliards</p>
+                        </div>
+                    </div>
+                    <div class="example-body">
+                        <h3>Ce qui s'est passé</h3>
+                        <p>En mars 2025, des pirates accèdent aux systèmes de Jaguar Land Rover. Leur porte d'entrée ? Des identifiants volés à un employé de LG Electronics en 2021 — il y a quatre ans — via un logiciel espion. Cet employé avait accès à Jira, une application collaborative utilisée par JLR. Ces mots de passe n'avaient jamais été changés.</p>
+                        <div class="example-impact">
+                            <strong>Préjudice subi :</strong> 350 Go de données volées, incluant du code source propriétaire, des logs de développement et une base de données d'employés. En septembre 2025, une deuxième attaque exploitant les mêmes failles paralyse toutes les usines mondiales pendant trois semaines. Coût estimé : 2,5 milliards d'euros pour l'économie britannique, 50 millions de livres de pertes par semaine, et jusqu'à 200 000 emplois menacés.
+                        </div>
+                        <div class="example-link">
+                            <strong>Le lien avec toi et l'IA :</strong>
+                            <p>Tu utilises peut-être ChatGPT, Copilot ou d'autres IA avec ton compte perso, connecté à ton mail, tes documents, ton Cloud. Si quelqu'un récupère ces accès (via un virus, un site piégé, ou du phishing), il peut :</p>
+                            <ul>
+                                <li>Lire tout ton historique de conversations avec l'IA</li>
+                                <li>Accéder aux fichiers que tu as partagés</li>
+                                <li>Garder cet accès pendant des années si tu ne changes jamais tes mots de passe</li>
+                            </ul>
+                        </div>
+                        <div class="example-lesson">
+                            <strong>À retenir pour toi :</strong>
+                            <ul>
+                                <li>Change régulièrement tes mots de passe</li>
+                                <li>Active la double authentification (2FA)</li>
+                                <li>Ne connecte pas ton compte IA à tout et n'importe quoi</li>
+                                <li>Ce que tu confies à l'IA reste stocké quelque part</li>
+                            </ul>
+                        </div>
+                        <p class="example-sources">📰 Sources : CNBC (octobre 2025), Wikipedia, Journal Auto, CYFIRMA</p>
+                    </div>
+                </div>
+
+                <div class="example-synthesis">
+                    <h3>Question de synthèse</h3>
+                    <p>Dans ces trois cas, les victimes ne sont pas des hackers ou des personnes malveillantes — ce sont des <strong>employés ordinaires</strong> qui voulaient juste gagner du temps.</p>
+                    <p><em>Et toi ? Quelles habitudes as-tu avec l'IA qui pourraient poser problème si tu travaillais un jour pour une entreprise ?</em></p>
+                </div>
+
+                <button class="btn-pill examples-close-btn" onclick="closeExamples()">
+                    <span class="btn-pill-text">Fermer</span>
+                    <span class="btn-pill-icon">✕</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1551,6 +1865,26 @@ Projets urgents:
                 state = JSON.parse(saved);
             }
         }
+
+        // ============================================
+        // MODALE EXEMPLES RÉELS
+        // ============================================
+        function showExamples() {
+            document.getElementById('examples-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeExamples() {
+            document.getElementById('examples-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Fermer avec Echap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeExamples();
+            }
+        });
 
         // Initialisation
         loadState();
