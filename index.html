@@ -1069,7 +1069,7 @@
         ========================================== -->
         <section id="screen-intro" class="screen active">
             <h1>Data Leak<br>Simulator</h1>
-            <p class="intro-subtitle">5 jours dans la peau d'un stagiaire</p>
+            <p class="intro-subtitle">2 semaines dans la peau d'un stagiaire</p>
             
             <div class="intro-context">
                 <p>Tu es stagiaire chez <strong>DigitalFlow</strong>, une PME de conseil. Pour gagner du temps, tu utilises ChatGPT gratuit.</p>
@@ -1077,13 +1077,13 @@
             </div>
 
             <button class="btn-pill" onclick="startSimulation()">
-                <span class="btn-pill-text">Commencer ma semaine de stage</span>
+                <span class="btn-pill-text">Commencer mes 2 semaines de stage</span>
                 <span class="btn-pill-icon">▶</span>
             </button>
 
             <p class="intro-warning">
                 <span>⏱</span>
-                <span>Durée : environ 15 minutes</span>
+                <span>Durée : environ 20 minutes</span>
             </p>
         </section>
 
@@ -1223,36 +1223,6 @@
                         <span class="rule-text"><strong>En cas de doute</strong>, demande à ton responsable</span>
                     </li>
                 </ul>
-            </div>
-
-            <div class="debrief-section">
-                <h2>✅ 5 tâches OK pour ChatGPT gratuit</h2>
-                <p>Bonne nouvelle : tu peux utiliser ChatGPT pour plein de choses ! Voici 5 exemples de tâches légitimes pendant ton stage :</p>
-                <ul class="golden-rules">
-                    <li>
-                        <span class="rule-icon">📚</span>
-                        <span class="rule-text"><strong>Apprendre un outil</strong> — "Comment faire un tableau croisé dynamique sur Excel ?" ou "Quels sont les raccourcis Photoshop ?"</span>
-                    </li>
-                    <li>
-                        <span class="rule-icon">💡</span>
-                        <span class="rule-text"><strong>Comprendre un concept</strong> — "Explique-moi le RGPD simplement" ou "C'est quoi la différence entre marge brute et marge nette ?"</span>
-                    </li>
-                    <li>
-                        <span class="rule-icon">✍️</span>
-                        <span class="rule-text"><strong>Rédiger un mail générique</strong> — "Aide-moi à écrire un mail pour demander un rendez-vous" (sans noms ni détails confidentiels)</span>
-                    </li>
-                    <li>
-                        <span class="rule-icon">🔍</span>
-                        <span class="rule-text"><strong>Trouver des bonnes pratiques</strong> — "Quelles sont les bonnes pratiques pour animer une réunion ?" ou "Comment structurer une présentation ?"</span>
-                    </li>
-                    <li>
-                        <span class="rule-icon">🌍</span>
-                        <span class="rule-text"><strong>Traduire un texte public</strong> — Articles de presse, documentation technique publique, contenus marketing génériques</span>
-                    </li>
-                </ul>
-                <p class="mt-2" style="background: rgba(18, 118, 118, 0.1); padding: 1rem; border-radius: 8px;">
-                    <strong>La règle simple :</strong> Si tu peux le dire à voix haute dans un café bondé sans problème, tu peux le mettre dans ChatGPT.
-                </p>
             </div>
 
             <div class="debrief-section">
@@ -1442,6 +1412,7 @@
         // DONNÉES DES SCÉNARIOS
         // ============================================
         const scenarios = [
+            // === SEMAINE 1 ===
             {
                 day: 1,
                 dayName: "Lundi",
@@ -1474,7 +1445,26 @@ Points abordés:
             {
                 day: 2,
                 dayName: "Mardi",
-                time: "Mardi 14h00",
+                time: "Mardi 10h00",
+                icon: "📊",
+                context: "Ton tuteur te demande de préparer un tableau Excel pour la réunion de demain",
+                title: "Apprendre les tableaux croisés dynamiques",
+                description: "Tu n'as jamais fait de tableau croisé dynamique sur Excel. Tu voudrais comprendre comment ça marche avant de te lancer.",
+                prompt: `Comment faire un tableau croisé dynamique sur Excel ?
+
+J'ai un fichier avec des colonnes "Date", "Produit", "Quantité" et "Montant". Je voudrais voir le total des ventes par produit et par mois.
+
+Peux-tu m'expliquer étape par étape ?`,
+                dataCount: 0,
+                leakedData: [],
+                promptExtract: "Comment faire un tableau croisé dynamique...",
+                isSafe: true,
+                safeReason: "Question technique générique, aucune donnée réelle de l'entreprise"
+            },
+            {
+                day: 3,
+                dayName: "Mercredi",
+                time: "Mercredi 14h00",
                 icon: "✉️",
                 context: "Un partenaire allemand a envoyé un mail avec des fautes, ton tuteur te demande de le corriger",
                 title: "Reformulation de mail partenaire",
@@ -1503,9 +1493,26 @@ klaus.hoffmann@datasecure.de
                 promptExtract: "Corrige ce mail... Klaus Hoffmann..."
             },
             {
-                day: 3,
-                dayName: "Mercredi",
-                time: "Mercredi 10h15",
+                day: 4,
+                dayName: "Jeudi",
+                time: "Jeudi 9h15",
+                icon: "📜",
+                context: "Tu dois vérifier que le projet respecte bien le RGPD, mais tu ne connais pas bien ce règlement",
+                title: "Comprendre le RGPD",
+                description: "Ton tuteur t'a demandé de vérifier la conformité RGPD d'un formulaire. Tu veux d'abord comprendre les bases.",
+                prompt: `Explique-moi le RGPD simplement.
+
+C'est quoi les principales obligations pour une entreprise qui collecte des données clients ? Et c'est quoi la différence entre "données personnelles" et "données sensibles" ?`,
+                dataCount: 0,
+                leakedData: [],
+                promptExtract: "Explique-moi le RGPD simplement...",
+                isSafe: true,
+                safeReason: "Question de culture générale, aucune donnée de l'entreprise"
+            },
+            {
+                day: 5,
+                dayName: "Vendredi",
+                time: "Vendredi 10h15",
                 icon: "📊",
                 context: "Ton tuteur te demande d'analyser les données de satisfaction client",
                 title: "Tableau de données clients",
@@ -1527,10 +1534,30 @@ Client D (EduFuture - directrice Amélie Rousseau): "Interface peu intuitive pou
                 ],
                 promptExtract: "Analyse ces retours clients... MediCare ASBL..."
             },
+            // === SEMAINE 2 ===
             {
-                day: 4,
-                dayName: "Jeudi",
-                time: "Jeudi 16h30",
+                day: 6,
+                dayName: "Lundi",
+                time: "Lundi 11h00",
+                icon: "✍️",
+                context: "Tu dois envoyer un mail pour demander un rendez-vous avec un prospect",
+                title: "Rédiger un mail de prise de contact",
+                description: "Ton tuteur te demande de rédiger un mail type pour contacter des prospects. Tu veux un modèle bien structuré.",
+                prompt: `Aide-moi à écrire un mail professionnel pour demander un rendez-vous.
+
+Le contexte : je suis stagiaire dans une entreprise de conseil digital et je dois contacter des prospects pour proposer un rendez-vous de présentation de nos services.
+
+Donne-moi un template générique que je pourrai adapter ensuite.`,
+                dataCount: 0,
+                leakedData: [],
+                promptExtract: "Aide-moi à écrire un mail professionnel...",
+                isSafe: true,
+                safeReason: "Demande de template générique, aucun nom ni donnée confidentielle"
+            },
+            {
+                day: 7,
+                dayName: "Mardi",
+                time: "Mardi 16h30",
                 icon: "👤",
                 context: "Un candidat a postulé mais n'a pas le profil, ton tuteur te demande un mail de refus poli",
                 title: "Email de refus de candidature",
@@ -1559,9 +1586,28 @@ Email: jonathan.lemaire.1985@gmail.com`,
                 promptExtract: "Refuser cette candidature... Jonathan Lemaire..."
             },
             {
-                day: 5,
-                dayName: "Vendredi",
-                time: "Vendredi 11h00",
+                day: 8,
+                dayName: "Mercredi",
+                time: "Mercredi 14h30",
+                icon: "💡",
+                context: "Tu dois préparer une présentation pour la réunion de vendredi",
+                title: "Idées pour une présentation dynamique",
+                description: "Tu cherches des idées pour rendre ta présentation plus engageante. Tu n'as pas encore de contenu, juste besoin d'inspiration.",
+                prompt: `Je dois faire une présentation de 15 minutes devant mon équipe vendredi.
+
+Quelles sont les bonnes pratiques pour rendre une présentation PowerPoint dynamique et engageante ?
+
+Des conseils sur la structure, le design, et comment capter l'attention de l'audience ?`,
+                dataCount: 0,
+                leakedData: [],
+                promptExtract: "Bonnes pratiques pour une présentation...",
+                isSafe: true,
+                safeReason: "Recherche de conseils généraux, aucune information sur le contenu réel"
+            },
+            {
+                day: 9,
+                dayName: "Jeudi",
+                time: "Jeudi 11h00",
                 icon: "📅",
                 context: "Fin de semaine, ton tuteur te demande d'optimiser le planning de l'équipe",
                 title: "Planification interne",
@@ -1586,6 +1632,25 @@ Projets urgents:
                     { level: "orange", text: "Informations RH individuelles de l'équipe" }
                 ],
                 promptExtract: "Crée un planning... entretien embauche ailleurs..."
+            },
+            {
+                day: 10,
+                dayName: "Vendredi",
+                time: "Vendredi 15h00",
+                icon: "🌍",
+                context: "Ton tuteur t'a partagé un article intéressant en anglais sur les tendances du marché",
+                title: "Traduire un article de presse",
+                description: "Tu voudrais traduire un extrait d'article du Financial Times sur les tendances de l'IA dans le conseil.",
+                prompt: `Traduis ce paragraphe en français :
+
+"The consulting industry is rapidly adopting AI tools to enhance productivity. According to recent studies, firms that implement generative AI solutions report a 25% increase in efficiency for routine tasks. However, experts warn about data privacy concerns when using public AI platforms for sensitive client work."
+
+C'est un extrait d'un article public du Financial Times.`,
+                dataCount: 0,
+                leakedData: [],
+                promptExtract: "Traduis ce paragraphe en français...",
+                isSafe: true,
+                safeReason: "Traduction d'un article de presse public, aucune donnée interne"
             }
         ];
 
@@ -1628,40 +1693,43 @@ Projets urgents:
         // ============================================
         function loadDay(dayIndex) {
             const scenario = scenarios[dayIndex];
-            
-            // Mise à jour header
-            document.getElementById('day-badge').textContent = `Jour ${scenario.day}/5`;
+            const totalDays = scenarios.length;
+
+            // Mise à jour header avec numéro de semaine
+            const weekNum = scenario.day <= 5 ? 1 : 2;
+            document.getElementById('day-badge').textContent = `Jour ${scenario.day}/${totalDays} (S${weekNum})`;
             document.getElementById('day-time').textContent = scenario.time;
-            
-            // Barre de progression
+
+            // Barre de progression (10 points)
             const progressBar = document.getElementById('progress-bar');
             progressBar.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < totalDays; i++) {
                 const dot = document.createElement('span');
                 dot.className = 'progress-dot';
                 if (i < dayIndex) dot.classList.add('completed');
                 if (i === dayIndex) dot.classList.add('current');
                 progressBar.appendChild(dot);
             }
-            
+
             // Contenu
             document.getElementById('day-context').textContent = scenario.context;
             document.getElementById('task-icon').textContent = scenario.icon;
             document.getElementById('task-title').textContent = scenario.title;
             document.getElementById('task-description').textContent = scenario.description;
             document.getElementById('prompt-content').textContent = scenario.prompt;
-            
+
             // Reset affichage
             document.getElementById('choice-phase').classList.remove('hidden');
             document.getElementById('feedback-phase').classList.add('hidden');
-            
+
             // Compteur
             document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
         }
 
         function makeChoice(usedAI) {
             const scenario = scenarios[state.currentDay];
-            
+            const isSafeTask = scenario.isSafe === true;
+
             // Enregistrer le choix
             state.choices.push({
                 day: scenario.day,
@@ -1670,46 +1738,66 @@ Projets urgents:
                 usedAI: usedAI,
                 dataCount: usedAI ? scenario.dataCount : 0,
                 leakedData: usedAI ? scenario.leakedData : [],
-                promptExtract: scenario.promptExtract
+                promptExtract: scenario.promptExtract,
+                isSafe: isSafeTask,
+                safeReason: scenario.safeReason || ""
             });
-            
+
             if (usedAI) {
                 state.totalDataLeaked += scenario.dataCount;
             }
-            
+
             // Afficher feedback
             document.getElementById('choice-phase').classList.add('hidden');
             document.getElementById('feedback-phase').classList.remove('hidden');
-            
+
             const feedbackIcon = document.getElementById('feedback-icon');
             const feedbackText = document.getElementById('feedback-text');
-            
+
             if (usedAI) {
-                feedbackIcon.textContent = '⚡';
-                feedbackText.textContent = 'Tâche accomplie rapidement !';
+                if (isSafeTask) {
+                    // Tâche sûre + IA utilisée = bon choix
+                    feedbackIcon.textContent = '✅';
+                    feedbackText.innerHTML = `Bon réflexe ! Cette tâche était OK pour ChatGPT.<br><small style="color: var(--retro-teal);">${scenario.safeReason}</small>`;
+                } else {
+                    // Tâche risquée + IA utilisée = mauvais choix
+                    feedbackIcon.textContent = '⚡';
+                    feedbackText.textContent = 'Tâche accomplie rapidement... mais à quel prix ?';
+                }
             } else {
-                feedbackIcon.textContent = '⏱️';
-                feedbackText.textContent = 'Tâche accomplie (un peu plus long)';
+                if (isSafeTask) {
+                    // Tâche sûre + pas d'IA = prudence excessive
+                    feedbackIcon.textContent = '🤔';
+                    feedbackText.innerHTML = `Prudent... mais cette tâche était sans risque !<br><small style="color: var(--retro-teal);">${scenario.safeReason}</small>`;
+                } else {
+                    // Tâche risquée + pas d'IA = bon choix
+                    feedbackIcon.textContent = '🛡️';
+                    feedbackText.textContent = 'Bien joué ! Tu as protégé les données de l\'entreprise.';
+                }
             }
-            
+
             document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
-            
+
             // Bouton suivant
             const btnText = document.getElementById('btn-continue-text');
-            if (state.currentDay === 4) {
-                btnText.textContent = 'Fin de semaine';
+            const totalDays = scenarios.length;
+            if (state.currentDay === totalDays - 1) {
+                btnText.textContent = 'Fin du stage';
+            } else if (state.currentDay === 4) {
+                btnText.textContent = 'Semaine 2';
             } else {
                 btnText.textContent = 'Jour suivant';
             }
-            
+
             // Sauvegarder
             saveState();
         }
 
         function nextDay() {
             state.currentDay++;
-            
-            if (state.currentDay >= 5) {
+            const totalDays = scenarios.length;
+
+            if (state.currentDay >= totalDays) {
                 showReveal();
             } else {
                 loadDay(state.currentDay);
@@ -1738,12 +1826,13 @@ Projets urgents:
             
             state.choices.forEach(choice => {
                 const entry = document.createElement('div');
-                entry.className = 'dossier-entry' + (choice.usedAI ? '' : ' skipped');
-                
-                if (choice.usedAI) {
+
+                if (choice.usedAI && choice.leakedData.length > 0) {
+                    // Tâche risquée avec IA = fuite de données
+                    entry.className = 'dossier-entry';
                     entry.innerHTML = `
                         <div class="dossier-entry-header">
-                            <span class="dossier-entry-icon">📅</span>
+                            <span class="dossier-entry-icon">🔴</span>
                             <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
                         </div>
                         <div class="dossier-prompt-extract">"${choice.promptExtract}"</div>
@@ -1756,16 +1845,40 @@ Projets urgents:
                             `).join('')}
                         </ul>
                     `;
-                } else {
+                } else if (choice.usedAI && choice.isSafe) {
+                    // Tâche sûre avec IA = bon choix
+                    entry.className = 'dossier-entry';
+                    entry.style.borderLeftColor = 'var(--retro-teal)';
                     entry.innerHTML = `
                         <div class="dossier-entry-header">
-                            <span class="dossier-entry-icon">✓</span>
+                            <span class="dossier-entry-icon">✅</span>
                             <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
                         </div>
-                        <p style="color: #888; font-style: italic;">Aucune donnée transmise à l'IA</p>
+                        <p style="color: var(--retro-teal); font-style: italic;">Utilisation appropriée de l'IA — ${choice.safeReason}</p>
+                    `;
+                } else if (!choice.usedAI && choice.isSafe) {
+                    // Tâche sûre sans IA = prudence excessive
+                    entry.className = 'dossier-entry skipped';
+                    entry.innerHTML = `
+                        <div class="dossier-entry-header">
+                            <span class="dossier-entry-icon">🤔</span>
+                            <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
+                        </div>
+                        <p style="color: #888; font-style: italic;">Tu aurais pu utiliser l'IA ici — ${choice.safeReason}</p>
+                    `;
+                } else {
+                    // Tâche risquée sans IA = bon choix
+                    entry.className = 'dossier-entry skipped';
+                    entry.style.borderLeftColor = 'var(--retro-teal)';
+                    entry.innerHTML = `
+                        <div class="dossier-entry-header">
+                            <span class="dossier-entry-icon">🛡️</span>
+                            <span class="dossier-entry-title">${choice.dayName} - ${choice.title}</span>
+                        </div>
+                        <p style="color: var(--retro-teal); font-style: italic;">Données protégées !</p>
                     `;
                 }
-                
+
                 entriesContainer.appendChild(entry);
             });
             
@@ -1854,16 +1967,24 @@ Projets urgents:
         // ============================================
         function showDebrief() {
             showScreen('screen-debrief');
-            
-            const usedAICount = state.choices.filter(c => c.usedAI).length;
+
+            const totalTasks = scenarios.length;
+            const safeTasks = state.choices.filter(c => c.isSafe);
+            const riskyTasks = state.choices.filter(c => !c.isSafe);
+
+            // Compter les bons choix
+            const goodSafeChoices = safeTasks.filter(c => c.usedAI).length; // IA utilisée pour tâches sûres
+            const goodRiskyChoices = riskyTasks.filter(c => !c.usedAI).length; // Pas d'IA pour tâches risquées
+            const totalGoodChoices = goodSafeChoices + goodRiskyChoices;
+
             const summary = document.getElementById('debrief-summary');
-            
-            if (usedAICount === 0) {
-                summary.innerHTML = `Tu n'as confié <strong>aucune donnée</strong> à l'IA publique cette semaine. Excellent réflexe !`;
-            } else if (usedAICount === 5) {
-                summary.innerHTML = `Tu as utilisé l'IA pour <strong>toutes les tâches</strong>, confiant <strong>${state.totalDataLeaked} données sensibles</strong> à une plateforme publique.`;
+
+            if (totalGoodChoices === totalTasks) {
+                summary.innerHTML = `<strong>Score parfait !</strong> Tu as su distinguer les ${safeTasks.length} tâches OK pour l'IA des ${riskyTasks.length} tâches à risque. Excellent discernement !`;
+            } else if (state.totalDataLeaked === 0) {
+                summary.innerHTML = `Tu n'as exposé <strong>aucune donnée sensible</strong>. Tu as bien protégé l'entreprise, même si tu aurais pu utiliser l'IA pour les ${safeTasks.length} tâches sans risque.`;
             } else {
-                summary.innerHTML = `Tu as utilisé l'IA pour <strong>${usedAICount} tâches sur 5</strong>, confiant <strong>${state.totalDataLeaked} données sensibles</strong> à une plateforme publique.`;
+                summary.innerHTML = `Sur ${totalTasks} tâches, tu as fait <strong>${totalGoodChoices} bons choix</strong>. Tu as exposé <strong>${state.totalDataLeaked} données sensibles</strong> à une plateforme publique.`;
             }
         }
 
