@@ -1651,6 +1651,37 @@ C'est un extrait d'un article public du Financial Times.`,
             totalDataLeaked: 0
         };
 
+        // Scénarios mélangés pour cette session
+        let shuffledScenarios = [];
+
+        // ============================================
+        // RANDOMISATION DES SCÉNARIOS
+        // ============================================
+        const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
+        const times = ['9h30', '10h00', '14h00', '9h15', '10h15', '11h00', '16h30', '14h30', '11h00', '15h00'];
+
+        function shuffleScenarios() {
+            // Créer des copies avec l'index original
+            const shuffled = scenarios.map((s, i) => ({...s, originalIndex: i}));
+
+            // Algorithme Fisher-Yates pour mélanger
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            // Mettre à jour les propriétés day, dayName, time après mélange
+            shuffled.forEach((scenario, index) => {
+                const dayNum = index + 1;
+                const weekDayIndex = index % 5; // 0-4 pour lundi-vendredi
+                scenario.day = dayNum;
+                scenario.dayName = dayNames[weekDayIndex];
+                scenario.time = `${dayNames[weekDayIndex]} ${times[index]}`;
+            });
+
+            return shuffled;
+        }
+
         // ============================================
         // FONCTIONS DE NAVIGATION
         // ============================================
@@ -1666,6 +1697,8 @@ C'est un extrait d'un article public du Financial Times.`,
                 choices: [],
                 totalDataLeaked: 0
             };
+            // Mélanger les scénarios pour chaque nouvelle partie
+            shuffledScenarios = shuffleScenarios();
             loadDay(0);
             showScreen('screen-day');
         }
@@ -1680,8 +1713,8 @@ C'est un extrait d'un article public du Financial Times.`,
         // GESTION DES JOURNÉES
         // ============================================
         function loadDay(dayIndex) {
-            const scenario = scenarios[dayIndex];
-            const totalDays = scenarios.length;
+            const scenario = shuffledScenarios[dayIndex];
+            const totalDays = shuffledScenarios.length;
 
             // Mise à jour header avec numéro de semaine
             const weekNum = scenario.day <= 5 ? 1 : 2;
@@ -1712,7 +1745,7 @@ C'est un extrait d'un article public du Financial Times.`,
         }
 
         function makeChoice(usedAI) {
-            const scenario = scenarios[state.currentDay];
+            const scenario = shuffledScenarios[state.currentDay];
             const isSafeTask = scenario.isSafe === true;
 
             // Enregistrer le choix
@@ -1738,7 +1771,7 @@ C'est un extrait d'un article public du Financial Times.`,
 
             // Bouton suivant
             const btnText = document.getElementById('btn-continue-text');
-            const totalDays = scenarios.length;
+            const totalDays = shuffledScenarios.length;
             if (state.currentDay === totalDays - 1) {
                 btnText.textContent = 'Fin du stage';
             } else if (state.currentDay === 4) {
@@ -1753,7 +1786,7 @@ C'est un extrait d'un article public du Financial Times.`,
 
         function nextDay() {
             state.currentDay++;
-            const totalDays = scenarios.length;
+            const totalDays = shuffledScenarios.length;
 
             if (state.currentDay >= totalDays) {
                 showReveal();
@@ -1926,7 +1959,7 @@ C'est un extrait d'un article public du Financial Times.`,
         function showDebrief() {
             showScreen('screen-debrief');
 
-            const totalTasks = scenarios.length;
+            const totalTasks = shuffledScenarios.length;
             const safeTasks = state.choices.filter(c => c.isSafe);
             const riskyTasks = state.choices.filter(c => !c.isSafe);
 
@@ -1965,13 +1998,32 @@ C'est un extrait d'un article public du Financial Times.`,
         // PERSISTANCE
         // ============================================
         function saveState() {
-            localStorage.setItem('dataLeakSimulator', JSON.stringify(state));
+            // Sauvegarder aussi l'ordre des scénarios (indices originaux)
+            const scenarioOrder = shuffledScenarios.map(s => s.originalIndex);
+            localStorage.setItem('dataLeakSimulator', JSON.stringify({
+                ...state,
+                scenarioOrder: scenarioOrder
+            }));
         }
 
         function loadState() {
             const saved = localStorage.getItem('dataLeakSimulator');
             if (saved) {
-                state = JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Restaurer l'ordre des scénarios si disponible
+                if (parsed.scenarioOrder) {
+                    shuffledScenarios = parsed.scenarioOrder.map((origIdx, newIdx) => {
+                        const scenario = {...scenarios[origIdx], originalIndex: origIdx};
+                        const dayNum = newIdx + 1;
+                        const weekDayIndex = newIdx % 5;
+                        scenario.day = dayNum;
+                        scenario.dayName = dayNames[weekDayIndex];
+                        scenario.time = `${dayNames[weekDayIndex]} ${times[newIdx]}`;
+                        return scenario;
+                    });
+                    delete parsed.scenarioOrder;
+                }
+                state = parsed;
             }
         }
 
