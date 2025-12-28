@@ -1127,19 +1127,7 @@
             </div>
 
             <div id="feedback-phase" class="hidden">
-                <div class="feedback-message neutral" id="feedback-message">
-                    <div class="feedback-icon" id="feedback-icon">⚡</div>
-                    <p class="feedback-text" id="feedback-text"></p>
-                </div>
-
-                <div class="data-counter" id="data-counter">
-                    <span class="data-counter-icon">📊</span>
-                    <span>Données confiées à l'IA :</span>
-                    <span class="data-counter-value" id="data-counter-value">0</span>
-                    <span>éléments</span>
-                </div>
-
-                <div class="text-center btn-continue">
+                <div class="text-center btn-continue" style="margin-top: 1.5rem;">
                     <button class="btn-pill" onclick="nextDay()">
                         <span class="btn-pill-text" id="btn-continue-text">Jour suivant</span>
                         <span class="btn-pill-icon">→</span>
@@ -1721,9 +1709,6 @@ C'est un extrait d'un article public du Financial Times.`,
             // Reset affichage
             document.getElementById('choice-phase').classList.remove('hidden');
             document.getElementById('feedback-phase').classList.add('hidden');
-
-            // Compteur
-            document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
         }
 
         function makeChoice(usedAI) {
@@ -1747,36 +1732,9 @@ C'est un extrait d'un article public du Financial Times.`,
                 state.totalDataLeaked += scenario.dataCount;
             }
 
-            // Afficher feedback
+            // Passer à la phase suivante (sans feedback immédiat)
             document.getElementById('choice-phase').classList.add('hidden');
             document.getElementById('feedback-phase').classList.remove('hidden');
-
-            const feedbackIcon = document.getElementById('feedback-icon');
-            const feedbackText = document.getElementById('feedback-text');
-
-            if (usedAI) {
-                if (isSafeTask) {
-                    // Tâche sûre + IA utilisée = bon choix
-                    feedbackIcon.textContent = '✅';
-                    feedbackText.innerHTML = `Bon réflexe ! Cette tâche était OK pour ChatGPT.<br><small style="color: var(--retro-teal);">${scenario.safeReason}</small>`;
-                } else {
-                    // Tâche risquée + IA utilisée = mauvais choix
-                    feedbackIcon.textContent = '⚡';
-                    feedbackText.textContent = 'Tâche accomplie rapidement... mais à quel prix ?';
-                }
-            } else {
-                if (isSafeTask) {
-                    // Tâche sûre + pas d'IA = prudence excessive
-                    feedbackIcon.textContent = '🤔';
-                    feedbackText.innerHTML = `Prudent... mais cette tâche était sans risque !<br><small style="color: var(--retro-teal);">${scenario.safeReason}</small>`;
-                } else {
-                    // Tâche risquée + pas d'IA = bon choix
-                    feedbackIcon.textContent = '🛡️';
-                    feedbackText.textContent = 'Bien joué ! Tu as protégé les données de l\'entreprise.';
-                }
-            }
-
-            document.getElementById('data-counter-value').textContent = state.totalDataLeaked;
 
             // Bouton suivant
             const btnText = document.getElementById('btn-continue-text');
